@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>WhatToDo</title>
+    <style>
+        table {
+            table-layout: fixed;
+            width:100%
+        }
+        td {
+            word-wrap:break-word;
+        }
+        th {
+            word-wrap:break-word;
+        }
+    </style>
+</head>
+<body>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" ></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script>
+    function get_items(){
+        $(
+          $.ajax({
+            url: 'http://localhost:8080/ToDo/items.do',
+            type: 'GET'
+          }).done(function(data) {
+            items_json = JSON.parse(data);
+            items = [];
+            for (i = 0; i < items_json.length; i++) {
+                items[i] = {id: items_json[i].id,
+                            description: items_json[i].description,
+                            date: items_json[i].date,
+                            done: items_json[i].done};
+            }
+            genRows();
+        })
+      );
+    }
+</script>
+<script>
+    function genRows() {
+        let show_all = document.getElementsByName('show_all')[0].checked;
+        let table = document.getElementById("items");
+        let rows = table.rows.length;
+        for (let i = 1; i < rows; i++) {
+            table.deleteRow(1);
+        }
+        var i = 1
+        for (let item of items) {
+            if (show_all || (!show_all && item.done == false)) {
+                let row = table.insertRow(i++);
+                for (key in item) {
+                    let cell = row.insertCell();
+                    cell.style = 'text-align: center; vertical-align: middle;';
+                    let content;
+                    if (key == 'date') {
+                        var date = new Date(item[key]);
+                        content = document.createTextNode(date.toISOString().split('T')[0]);
+                    } else if (key == 'done') {
+                        content = document.createElement("input");
+                        content.type = 'checkbox';
+                        content.name = 'done';
+                        content.value = 'Выполнить';
+                        content.checked = item.done;
+                        content.onclick = function() {
+                            item.done = content.checked;
+                            update(item);
+                        };
+                    } else {
+                        content = document.createTextNode(item[key]);
+                        if (key == 'description') {
+                            cell.style = 'text-align: left; vertical-align: top; word-wrap:break-word;';
+                        }
+                    }
+                    cell.appendChild(content);
+                }
+            }
+        }
+    }
+</script>
+<script>
+    function update(data){
+        $(
+            $.ajax({
+                url: 'http://localhost:8080/ToDo/items.do',
+                type: 'POST',
+                data: JSON.stringify(data)
+            }).done(function(data) {
+                get_items();
+            })
+         );
+    }
+</script>
+<script>
+    function add_item(){
+        let desc = $("#new_item");
+        if (desc.val().length > 2) {
+            var item = {id: 0,
+                    description: desc.val(),
+                    date: 0,
+                    done: false};
+            update(item);
+            desc.val('');
+        } else {
+            alert('Поле задача должно содержать более 2 символов');
+        }
+    }
+</script>
+    <div class="container">
+        <div class="row pt-3">
+            <h2>
+                Список задач
+            </h2>
+        </div>
+        <span>
+            Показывать выполненные задачи <input type="checkbox" name="show_all" onclick="genRows()">
+        </span>
+        <br />
+        <script>get_items();</script>
+        <table class="table table-bordered" id="items">
+            <thead>
+            <tr>
+                <th style="width:10%; text-align: center; vertical-align: middle;">id</th>
+                <th style="width:60%; text-align: center; vertical-align: middle;">Описание задачи</th>
+                <th style="width:20%; text-align: center; vertical-align: middle;">Дата создания</th>
+                <th style="width:10%; text-align: center; vertical-align: middle;">Выполнено</th>
+            </tr>
+            </thead>
+        </table>
+        <br />
+        <form>
+            <div class="form-group">
+                <label for="new_item">Новая задача:</label>
+                <input type="text" class="form-control" id="new_item" placeholder="what ToDo">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="add_item()">Добавить</button>
+        </form>
+    </div>
+</body>
+</html>
