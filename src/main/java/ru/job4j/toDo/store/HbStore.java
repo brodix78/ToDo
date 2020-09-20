@@ -2,19 +2,34 @@ package ru.job4j.toDo.store;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import ru.job4j.toDo.model.Item;
-
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class HbStore implements Store, AutoCloseable{
 
     private final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
             .configure().build();
     private final SessionFactory sf = new MetadataSources(registry).buildMetadata().buildSessionFactory();
+
+    private <T> T tx(final Function<Session, T> command) {
+        final Session session = sf.openSession();
+        final Transaction tx = session.beginTransaction();
+        try {
+            T rsl = command.apply(session);
+            tx.commit();
+            return rsl;
+        } catch (final Exception e) {
+            session.getTransaction().rollback();
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
 
     @Override
     public void close() {
@@ -23,70 +38,31 @@ public class HbStore implements Store, AutoCloseable{
 
     @Override
     public List<Item> allItems() {
-        Session session = sf.openSession();
-        List allItems = new ArrayList<>();
-        try {
-            session.beginTransaction();
-            allItems = session.createQuery("FROM ru.job4j.toDo.model.Item ORDER BY id").list();
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            e.printStackTrace();
-        } finally {
-            session.close();
-        }
-        return allItems;
+        return this.tx(session -> session.createQuery(
+                "FROM ru.job4j.toDo.model.Item ORDER BY id").list());
     }
 
     @Override
     public Item addItem(String desc) {
-        Session session = sf.openSession();
-        Item item = new Item();
-        try {
-            session.beginTransaction();
+        return this.tx(session -> {
+            Item item = new Item();
             item.setDescription(desc);
             item.setDate(System.currentTimeMillis());
             session.save(item);
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            e.printStackTrace();
-        } finally {
-            session.close();
-        }
-        return item;
+            return item;
+        });
     }
 
     @Override
     public Item updateItem(Item item) {
-        Session session = sf.openSession();
-        try {
-            session.beginTransaction();
+        return this.tx(session -> {
             session.update(item);
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            e.printStackTrace();
-        } finally {
-            session.close();
-        }
-        return item;
+            return item;
+        });
     }
 
     @Override
     public Item getById(int id) {
-        Session session = sf.openSession();
-        Item item = new Item();
-        try {
-            session.beginTransaction();
-            item = session.get(Item.class, id);
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            e.printStackTrace();
-        } finally {
-            session.close();
-        }
-        return item;
+        return this.tx(session -> session.get(Item.class, id));
     }
 }
