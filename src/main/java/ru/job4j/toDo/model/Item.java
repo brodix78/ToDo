@@ -4,13 +4,32 @@ import javax.persistence.*;
 @Entity
 @Table(name = "item")
 public class Item {
-    int id;
-    String description;
-    Long date;
-    boolean done;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "date")
+    private Long date;
+
+    @Column(name = "done")
+    private boolean done;
+
+    @ManyToOne
+    @JoinColumn(name = "userTD_id")
+    private User user;
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public int getId() {
         return id;
     }
@@ -19,7 +38,6 @@ public class Item {
         this.id = id;
     }
 
-    @Column(name = "description")
     public String getDescription() {
         return description;
     }
@@ -28,7 +46,6 @@ public class Item {
         this.description = description;
     }
 
-    @Column(name = "date")
     public Long getDate() {
         return date;
     }
@@ -37,7 +54,6 @@ public class Item {
         this.date = date;
     }
 
-    @Column(name = "done")
     public boolean isDone() {
         return done;
     }

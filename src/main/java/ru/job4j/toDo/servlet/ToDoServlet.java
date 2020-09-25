@@ -12,8 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ToDoServlet extends HttpServlet {
 
@@ -29,7 +27,7 @@ public class ToDoServlet extends HttpServlet {
             }
             ObjectMapper mapper = new ObjectMapper();
             if (jo != null && !jo.isEmpty()) {
-                item = mapper.readValue(jo.toString(), new TypeReference<Item>(){});
+                item = mapper.readValue(jo.toString(), new TypeReference<>(){});
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -37,9 +35,8 @@ public class ToDoServlet extends HttpServlet {
             if (item.getId() != 0) {
                 store.updateItem(item);
             } else {
-                store.addItem(item.getDescription());
+                store.addItem(item);
             }
-
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {

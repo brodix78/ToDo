@@ -4,9 +4,21 @@
 
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
+  <filter>
+    <filter-name>AuthFilter</filter-name>
+    <filter-class>ru.job4j.toDo.servlet.filter.AuthFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>AuthFilter</filter-name>
+    <url-pattern>/items.do</url-pattern>
+  </filter-mapping>
     <listener>
       <listener-class>ru.job4j.toDo.servlet.listener.InitContext</listener-class>
     </listener>
+    <servlet>
+    <servlet-name>UserServlet</servlet-name>
+    <servlet-class>ru.job4j.toDo.servlet.UserServlet</servlet-class>
+    </servlet>
     <servlet>
       <servlet-name>ToDoServlet</servlet-name>
       <servlet-class>ru.job4j.toDo.servlet.ToDoServlet</servlet-class>
@@ -14,5 +26,9 @@
     <servlet-mapping>
       <servlet-name>ToDoServlet</servlet-name>
       <url-pattern>/items.do</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+      <servlet-name>UserServlet</servlet-name>
+      <url-pattern>/user.do</url-pattern>
     </servlet-mapping>
 </web-app>

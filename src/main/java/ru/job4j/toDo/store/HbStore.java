@@ -7,6 +7,9 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import ru.job4j.toDo.model.Item;
+import ru.job4j.toDo.model.User;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -38,15 +41,15 @@ public class HbStore implements Store, AutoCloseable{
 
     @Override
     public List<Item> allItems() {
-        return this.tx(session -> session.createQuery(
-                "FROM ru.job4j.toDo.model.Item ORDER BY id").list());
+        return this.tx(session -> session.createQuery("FROM ru.job4j.toDo.model.Item ORDER BY id").list());
     }
 
     @Override
-    public Item addItem(String desc) {
+    public Item addItem(Item in) {
         return this.tx(session -> {
             Item item = new Item();
-            item.setDescription(desc);
+            item.setDescription(in.getDescription());
+            item.setUser(in.getUser());
             item.setDate(System.currentTimeMillis());
             session.save(item);
             return item;
@@ -62,7 +65,48 @@ public class HbStore implements Store, AutoCloseable{
     }
 
     @Override
-    public Item getById(int id) {
+    public Item getItemById(int id) {
         return this.tx(session -> session.get(Item.class, id));
+    }
+
+    @Override
+    public List<User> allUsers() {
+        return this.tx(session -> {
+            ArrayList<User> users = new ArrayList<>();
+            List original = session.createQuery("SELECT id, name FROM ru.job4j.toDo.model.User").getResultList();
+            for (Object user : original) {
+                Object[] temp = (Object[]) user;
+                Integer id = (Integer) temp[0];
+                String name = (String) temp[1];
+                users.add(new User(id, name));
+            }
+            return users;
+        });
+    }
+
+    @Override
+    public User addUser(User user) {
+        return this.tx(session -> {
+            session.save(user);
+            return user;
+        });
+    }
+
+    @Override
+    public User getUser(User user) {
+        return this.tx(session -> {
+            List idList = session.createQuery("SELECT id FROM ru.job4j.toDo.model.User WHERE name = ?1 AND password = ?2").
+                    setParameter(1, user.getName()).
+                    setParameter(2, user.getPassword()).list();
+            if (idList.size() == 1) {
+                for (Object id : idList) {
+                    user.setId((int) id);
+                }
+            } else {
+                user.setId(0);
+            }
+            user.setPassword("");
+            return user;
+        });
     }
 }

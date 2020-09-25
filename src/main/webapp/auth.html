@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>WhatToDo</title>
+</head>
+<body>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" ></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script>
+    function auth(){
+        var user = {id: id,
+                    name: $("#login").val(),
+                    password: $("#pass").val()};
+            console.log('USER: ' + user.id + ' ' + user.name + ' ' + user.password);
+        $(
+          $.ajax({
+            url: 'http://localhost:8080/ToDo/user.do',
+            type: 'POST',
+            data: JSON.stringify(user)
+          }).done(function(data) {
+            console.log('DATA: ' + data);
+            user = JSON.parse(data);
+            if (user.id == 0) {
+                if(id == -500) {
+                    alert('Попробуйте другой логин');
+                } else if(id == 0) {
+                    alert('Проверьте логин и пароль');
+                }
+            } else if (user.id > 0){
+                window.location.href = "index.html";
+            }
+        })
+      );
+    }
+</script>
+<div class="container">
+    <div class="row pt-3">
+        <h2 id="what">
+        </h2>
+    </div>
+    <form>
+        <div class="form-group">
+            <label for="login">Логин:</label>
+            <input type="text" class="form-control" id="login">
+            <label for="pass">Пароль:</label>
+            <input type="password" class="form-control" id="pass" name="pass">
+        </div>
+        <button type="button" class="btn btn-primary" id="butn" onclick="auth()">Войти</button>
+    </form>
+    <br />
+    <span id = "refer">
+    </span>
+    <script>
+    let select = document.getElementById("what");
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    id = urlParams.get('func') == 'reg' ? -500 : 0;
+    let headerText;
+    let buttonText;
+    if (id == -500) {
+        headerText = 'Регистрация';
+        buttonText = 'Зарегистрировать';
+    } else {
+        headerText = 'Авторизация';
+        buttonText = 'Войти';
+        document.getElementById("refer").innerHTML = '<a href="auth.html?func=reg">Регистрация</a>';
+    }
+    select.innerHTML = headerText;
+    document.getElementById("butn").innerHTML = buttonText;
+</script>
+</div>
+</body>
+</html>
